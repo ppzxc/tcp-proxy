@@ -1,0 +1,30 @@
+static_resources:
+  listeners:
+    - name: listener_0
+      address:
+        socket_address:
+          address: 0.0.0.0
+          port_value: 10000
+      filter_chains:
+        - filters:
+            - name: envoy.filters.network.tcp_proxy
+              typed_config:
+                "@type": type.googleapis.com/envoy.extensions.filters.network.tcp_proxy.v3.TcpProxy
+                stat_prefix: destination
+                cluster: echo-cluster
+  clusters:
+    - name: echo-cluster
+      connect_timeout: 30s
+      #type: STRICT_DNS
+      type: LOGICAL_DNS
+      #type: STATIC
+      dns_lookup_family: V4_ONLY
+      load_assignment:
+        cluster_name: cluster_0
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: echo.example.com
+                      port_value: 9000

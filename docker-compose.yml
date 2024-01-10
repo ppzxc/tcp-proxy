@@ -1,0 +1,40 @@
+version: "3.9"
+
+networks:
+  envoy:
+    ipam:
+      driver: default
+
+services:
+  envoy:
+    image: envoyproxy/envoy:v1.28-latest
+    ports:
+      - 10000:10000
+    volumes:
+      - ./envoy.yaml:/etc/envoy/envoy.yaml
+    networks:
+      - envoy
+
+  echo:
+    build: ./echo
+    restart: unless-stopped
+    hostname: echo.example.com
+    volumes:
+      - ./echo/echo:/dist/app
+    networks:
+      - envoy
+    deploy:
+      mode: replicated
+      replicas: 3
+      endpoint_mode: dnsrr
+
+  client:
+    build: ./client
+    restart: unless-stopped
+    volumes:
+      - ./client/client:/dist/app
+    networks:
+      - envoy
+    command:
+      - "--host=envoy"
+      - "--port=10000"
